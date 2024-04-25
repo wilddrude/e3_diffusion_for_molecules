@@ -5,6 +5,8 @@ data/*
 bash.sh
 kohler/cache/*
 *.ipynb
+*.xyz
+*.txt
 .
 *.log
 *wandb*
