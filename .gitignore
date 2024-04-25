@@ -1,11 +1,14 @@
 *__pycache__*
 *.pyc
 data/*
+*.npy
 .idea*
 bash.sh
 kohler/cache/*
 *.ipynb
 .
+*.xyz
+*.txt
 *.log
 *wandb*
 *.DS_Store*
