@@ -185,6 +185,7 @@ split_data = build_pff_dataset.load_split_data(
     test_proportion=0.1,
     filter_size=args.filter_molecule_size,
 )
+print(f"Loaded {len(split_data[0])} training molecules.")
 transform = build_pff_dataset.GeomDrugsTransform(
     dataset_info, args.include_charges, device, args.sequential
 )
@@ -201,6 +202,7 @@ for key, data_list in zip(["train", "val", "test"], split_data):
         shuffle=shuffle,
     )
 del split_data
+print("Data loaded.")
 
 atom_encoder = dataset_info["atom_encoder"]
 atom_decoder = dataset_info["atom_decoder"]
@@ -265,7 +267,7 @@ model, nodes_dist, prop_dist = get_model(
 model = model.to(device)
 optim = get_optim(args, model)
 # print(model)
-
+print("Model created.")
 
 gradnorm_queue = utils.Queue()
 gradnorm_queue.add(3000)  # Add large value that will be flushed.
@@ -301,10 +303,13 @@ def main():
         model_ema = model
         model_ema_dp = model_dp
 
+    print("Starting training.")
     best_nll_val = 1e8
     best_nll_test = 1e8
-    for epoch in range(args.start_epoch, args.n_epochs):
+    for epoch in [0]:  # range(args.start_epoch, args.n_epochs):
         start_epoch = time.time()
+        print(f"Epoch {epoch}")
+        print("Training...")
         train_test.train_epoch(
             args,
             dataloaders["train"],
@@ -328,17 +333,17 @@ def main():
             if isinstance(model, en_diffusion.EnVariationalDiffusion):
                 wandb.log(model.log_info(), commit=True)
 
-            if not args.break_train_epoch:
-                train_test.analyze_and_save(
-                    epoch,
-                    model_ema,
-                    nodes_dist,
-                    args,
-                    device,
-                    dataset_info,
-                    prop_dist,
-                    n_samples=args.n_stability_samples,
-                )
+            # if not args.break_train_epoch:
+            #     train_test.analyze_and_save(
+            #         epoch,
+            #         model_ema,
+            #         nodes_dist,
+            #         args,
+            #         device,
+            #         dataset_info,
+            #         prop_dist,
+            #         n_samples=args.n_stability_samples,
+            #     )
             nll_val = train_test.test(
                 args,
                 dataloaders["val"],
