@@ -786,7 +786,7 @@ class EnVariationalDiffusion(torch.nn.Module):
     def sample_p_zs_given_zt(
         self, s, t, zt, node_mask, edge_mask, context, fix_noise=False
     ):
-        """Samples from zs ~ p(zs | zt). Only used during sampling."""
+        """Samples from zs ~ p(zs | zt). Only used during sampling. ICH"""
         gamma_s = self.gamma(s)
         gamma_t = self.gamma(t)
 
@@ -826,7 +826,11 @@ class EnVariationalDiffusion(torch.nn.Module):
             ],
             dim=2,
         )
-        return zs
+
+        new = zt.clone()  # ICH
+        new[:, :, : self.n_dims] = zs[:, :, : self.n_dims]  # ICH
+
+        return new  # zs
 
     def sample_combined_position_feature_noise(self, n_samples, n_nodes, node_mask):
         """
@@ -910,6 +914,7 @@ class EnVariationalDiffusion(torch.nn.Module):
         node_mask,
         edge_mask,
         context,
+        factor=1.0,
         fix_noise=False,
     ):
         """
@@ -924,10 +929,11 @@ class EnVariationalDiffusion(torch.nn.Module):
         #     )
         # print("n_dims", self.n_dims)
         # print("z", z.size(), z)
+
         diffusion_utils.assert_mean_zero_with_mask(z[:, :, : self.n_dims], node_mask)
 
         # Iteratively sample p(z_s | z_t) for t = 1, ..., T, with s = t - 1.
-        for s in reversed(range(0 * self.T // 10, self.T)):
+        for s in reversed(range(int((1 - factor) * self.T), self.T)):
             s_array = torch.full((n_samples, 1), fill_value=s, device=z.device)
             t_array = s_array + 1
             s_array = s_array / self.T
